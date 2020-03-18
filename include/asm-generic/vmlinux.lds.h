@@ -537,6 +537,7 @@
 									\
 	RO_EXCEPTION_TABLE						\
 	NOTES								\
+	BTF								\
 									\
 	. = ALIGN((align));						\
 	__end_rodata = .;
