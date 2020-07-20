@@ -53,7 +53,7 @@ int snd_soc_link_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 
 int snd_soc_link_startup(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
 	int ret = 0;
 
 	if (rtd->dai_link->ops &&
@@ -65,7 +65,7 @@ int snd_soc_link_startup(struct snd_pcm_substream *substream)
 
 void snd_soc_link_shutdown(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
 
 	if (rtd->dai_link->ops &&
 	    rtd->dai_link->ops->shutdown)
@@ -74,7 +74,7 @@ void snd_soc_link_shutdown(struct snd_pcm_substream *substream)
 
 int snd_soc_link_prepare(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
 	int ret = 0;
 
 	if (rtd->dai_link->ops &&
@@ -87,7 +87,7 @@ int snd_soc_link_prepare(struct snd_pcm_substream *substream)
 int snd_soc_link_hw_params(struct snd_pcm_substream *substream,
 			   struct snd_pcm_hw_params *params)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
 	int ret = 0;
 
 	if (rtd->dai_link->ops &&
@@ -99,7 +99,7 @@ int snd_soc_link_hw_params(struct snd_pcm_substream *substream,
 
 void snd_soc_link_hw_free(struct snd_pcm_substream *substream)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
 
 	if (rtd->dai_link->ops &&
 	    rtd->dai_link->ops->hw_free)
@@ -108,7 +108,7 @@ void snd_soc_link_hw_free(struct snd_pcm_substream *substream)
 
 int snd_soc_link_trigger(struct snd_pcm_substream *substream, int cmd)
 {
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
 	int ret = 0;
 
 	if (rtd->dai_link->ops &&
