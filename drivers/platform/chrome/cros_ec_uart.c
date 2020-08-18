@@ -17,6 +17,7 @@
 #include <linux/serdev.h>
 #include <linux/slab.h>
 #include <uapi/linux/sched/types.h>
+#include <cros_ec.h>
 
 /*
  * EC sends contiguous bytes of response packet on UART AP RX.
