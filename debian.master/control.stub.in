@@ -1,7 +1,7 @@
 Source: SRCPKGNAME
 Section: devel
 Priority: optional
-Maintainer: Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>
+Maintainer: KloudOS <adming@kloudos.org>
 Standards-Version: 3.9.4.0
 Build-Depends:
  debhelper-compat (= 10),
@@ -57,7 +57,7 @@ Build-Depends-Indep:
  fonts-noto-cjk <!stage1>,
  latexmk <!stage1>,
  librsvg2-bin <!stage1>,
-Vcs-Git: git://git.launchpad.net/~ubuntu-kernel/ubuntu/+source/linux/+git/=SERIES=
+Vcs-Git: https://github.com/kloudos/kernel
 XS-Testsuite: autopkgtest
 #XS-Testsuite-Depends: gcc-4.7 binutils
 
@@ -70,7 +70,7 @@ Provides: linux-source
 Depends: ${misc:Depends}, binutils, bzip2, coreutils
 Recommends: libc-dev, gcc, make
 Suggests: libncurses-dev | ncurses-dev, kernel-package, libqt3-dev
-Description: Linux kernel source for version PKGVER with Ubuntu patches
+Description: Linux kernel source for version PKGVER with KlouOS specific changes.
  This package provides the source code for the Linux kernel version
  PKGVER.
  .
@@ -222,16 +222,16 @@ Description: Complete Generic Linux kernel and headers
 
 # } linux-meta
 
-# linux-system76 {
+# linux-kloudos {
 
-Package: SRCPKGNAME-system76
+Package: SRCPKGNAME-kloudos
 Build-Profiles: <!stage1>
 Architecture: amd64
 Section: kernel
 Depends:
  ${misc:Depends},
  SRCPKGNAME-generic (= ${binary:Version})
-Description: System76 recommended Linux kernel
- This package depends upon the recommended kernel for System76 users.
+Description: KloudOS recommended Linux kernel
+ This package depends upon the recommended kernel for KloudOS users.
 
-# } linux-system76
+# } linux-kloudos

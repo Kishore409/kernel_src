@@ -1,0 +1,231 @@
+#!/bin/bash
+
+###################################################################
+#Sanity checks the options passed from build.sh.
+###################################################################
+
+###### exit on any script line that fails #########################
+set -o errexit
+###### bail on any unitialized variable reads #####################
+set -o nounset
+###### bail on failing commands before last pipe #################
+set -o pipefail
+###### Use this to ignore Errors for certian commands ###########
+
+###################################################################
+#update_config.
+###################################################################
+update_config() {
+	BUILD_DEBUG=${1:-"--false"} # Possible values: --false, --true
+	BUILD_TARGET=${2:-"--client"} # Possible values: --client, --ds, --server
+	BUILD_VENDOR_CPU=${3:-"--intel"} # Possible values: --amd, --intel, --arm64
+	BUILD_VENDOR_MAIN_GPU=${4:-"--intel"} # Possible values: --amd, --intel, --nvidia
+	BUILD_VENDOR_SECONDARY_GPU=${5:-"--none"} # Possible values: --none, --amd, --intel, --nvidia
+
+	BUILD_PREFIX_NAME=kloudos_client
+	BUILD_CPU_VENDOR_NAME=intel
+	BUILD_MAIN_GPU_VENDOR_NAME=intel
+	BUILD_SECONDARY_GPU_VENDOR_NAME=none
+	BUILD_TARGET_TYPE=release
+	BUILD_ARCH=64
+	BUILD_SEPERATOR='_'
+	BUILD_POSTFIX=defconfig
+	if [[ "$BUILD_TARGET" == "--ds" ]]; then
+		BUILD_PREFIX_NAME=kloudos_ds
+	else
+		if [[ "$BUILD_TARGET" == "--server" ]]; then
+			BUILD_PREFIX_NAME=kloudos_server
+		fi
+	fi
+
+	if [[ "$BUILD_VENDOR_CPU" == "--amd" ]]; then
+		BUILD_CPU_VENDOR_NAME=amd
+	else
+		if [[ $BUILD_VENDOR_CPU == "--arm64" ]]; then
+			BUILD_CPU_VENDOR_NAME=arm64
+		fi
+
+		if [[ $BUILD_VENDOR_CPU == "--all" ]]; then
+			BUILD_CPU_VENDOR_NAME=all
+		fi
+	fi
+
+	if [[ "$BUILD_VENDOR_MAIN_GPU" == "--amd" ]]; then
+		BUILD_MAIN_GPU_VENDOR_NAME=amd
+	else
+		if [[ "$BUILD_VENDOR_MAIN_GPU" == "--nvidia" ]]; then
+			BUILD_MAIN_GPU_VENDOR_NAME=nvidia
+		fi
+
+		if [[ "$BUILD_VENDOR_MAIN_GPU" == "--all" ]]; then
+			BUILD_MAIN_GPU_VENDOR_NAME=all
+		fi
+	fi
+
+	if [[ "$BUILD_DEBUG" == "--true" ]]; then
+		BUILD_TARGET_TYPE=debug
+	fi
+
+	if [[ "$BUILD_VENDOR_SECONDARY_GPU" == "--amd" ]]; then
+		BUILD_SECONDARY_GPU_VENDOR_NAME=amd
+	else
+		if [[ "$BUILD_VENDOR_SECONDARY_GPU" == "--nvidia" ]]; then
+			BUILD_SECONDARY_GPU_VENDOR_NAME=nvidia
+		fi
+
+		if [[ "$BUILD_VENDOR_SECONDARY_GPU" == "--all" ]]; then
+			BUILD_SECONDARY_GPU_VENDOR_NAME=all
+		fi
+	fi
+
+	BUILD_DEF_CONFIG_NAME=$BUILD_PREFIX_NAME$BUILD_SEPERATOR$BUILD_ARCH$BUILD_SEPERATOR$BUILD_CPU_VENDOR_NAME$BUILD_SEPERATOR$BUILD_MAIN_GPU_VENDOR_NAME$BUILD_SEPERATOR$BUILD_SECONDARY_GPU_VENDOR_NAME$BUILD_SEPERATOR$BUILD_TARGET_TYPE$BUILD_SEPERATOR$BUILD_POSTFIX
+	cp .config arch/x86/configs/$BUILD_DEF_CONFIG_NAME
+	echo "Done $BUILD_DEF_CONFIG_NAME"
+}
+
+PC_COMMON_X86_64_CONFIG='debian.master/config/config.common.ubuntu debian.master/config/amd64/config.common.amd64 debian.master/config/amd64/config.flavour.generic kloudos/config/common_defconfig'
+PC_COMMON_arm_64_CONFIG='debian.master/config/config.common.ubuntu debian.master/config/arm64/config.common.arm64 debian.master/config/arm64/config.flavour.generic debian.master/config/arm64/config.flavour.generic-64k kloudos/config/common_defconfig kloudos/config/remove_non_amd_defconfig kloudos/config/remove_non_intel_defconfig'
+###################################################DS Section############################################################################
+####FIXME: Separate AMD and Intel Specific configs
+
+PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE=$PC_COMMON_X86_64_CONFIG' kloudos/config/ds_common_defconfig'
+
+PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE=$PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE' kloudos/config/debug_defconfig'
+
+## Generate Intel specific DS release config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_intel_defconfig
+
+update_config --false --ds --intel --intel
+
+## Generate Intel specific DS debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_intel_defconfig
+
+update_config --true --ds --intel --intel
+
+#####AMD specific config
+## Generate AMD specific DS release config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_amd_defconfig
+
+update_config --false --ds --amd --amd
+
+## Generate AMD specific DS debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_amd_defconfig
+
+update_config --true --ds --amd --amd
+
+#####ARM specific config
+##FIXME: DS Specific Arm Config
+## Generate DS specific release config
+PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE=$PC_COMMON_arm_64_CONFIG' kloudos/config/common_defconfig kloudos/config/common_arm_defconfig kloudos/config/ds_common_defconfig'
+
+PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE=$PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE' kloudos/config/debug_arm_defconfig'
+
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE
+
+update_config --false --ds --arm64 --arm64
+
+## Generate DS specific debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE
+
+update_config --true --ds --arm64 --arm64
+
+
+
+###################################################Laptop & Display###########################################################################
+####FIXME: Separate AMD and Intel Specific configs. Have a hybrid config of different combinations gpu_cpu i.e. nvidia_amd, nvidia_intel, amd_intel, intel_amd
+PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE=$PC_COMMON_X86_64_CONFIG' kloudos/config/android_defconfig kloudos/config/common_virtio_defconfig'
+
+PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE=$PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE' kloudos/config/debug_defconfig'
+
+## Generate Intel specific release config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_intel_defconfig
+
+update_config --false --client --intel --intel
+
+## Generate Intel specific debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_intel_defconfig
+
+update_config --true --client --intel --intel
+
+#####AMD specific config
+## Generate AMD specific release config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_amd_defconfig
+
+update_config --false --client --amd --amd
+
+## Generate AMD specific debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_amd_defconfig
+
+update_config --true --client --amd --amd
+
+## Intel-AMD Hybrid Combination
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE
+update_config --false --client --all --all --all
+
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE
+update_config --false --client --all --all --all
+
+#####ARM specific config
+PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE=$PC_COMMON_arm_64_CONFIG' kloudos/config/common_defconfig kloudos/config/common_arm_defconfig kloudos/config/android_defconfig kloudos/config/common_virtio_defconfig'
+
+PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE=$PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE' kloudos/config/debug_arm_defconfig'
+
+## Generate specific release config
+
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_amd_defconfig kloudos/config/remove_non_intel_defconfig
+
+update_config --false --client --arm64 --arm64
+
+## Generate specific debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_amd_defconfig kloudos/config/remove_non_intel_defconfig
+
+update_config --true --client --arm64 --arm64
+
+
+
+###################################################Server###########################################################################
+#FIXME: REMOVE ALL DISPLAY DEPENDENCIES AND MAKE A NEW GENERIC SERVER CONFIG
+PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE=$PC_COMMON_X86_64_CONFIG' kloudos/config/android_defconfig kloudos/config/common_virtio_defconfig'
+
+PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE=$PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE' kloudos/config/debug_defconfig'
+
+## Generate Intel specific release config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_intel_defconfig
+
+update_config --false --server --intel --intel
+
+## Generate Intel specific debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_intel_defconfig
+
+update_config --true --server --intel --intel
+
+#####AMD specific config
+## Generate AMD specific release config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_amd_defconfig
+
+update_config --false --server --amd --amd
+
+## Generate AMD specific debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_amd_defconfig
+
+update_config --true --server --amd --amd
+
+#####ARM specific config
+PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE=$PC_COMMON_arm_64_CONFIG' kloudos/config/common_defconfig kloudos/config/android_defconfig kloudos/config/common_arm_defconfig kloudos/config/common_virtio_defconfig'
+
+PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE=$PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE' kloudos/config/debug_arm_defconfig'
+
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE
+
+update_config --false --server --arm64 --amd
+update_config --false --server --arm64 --nvidia
+update_config --false --server --arm64 --intel
+
+## Generate debug config
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE
+
+update_config --true --server --arm64 --amd
+update_config --true --server --arm64 --nvidia
+update_config --true --server --arm64 --intel
+
+rm .config

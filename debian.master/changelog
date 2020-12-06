@@ -1,3 +1,9 @@
+linux (5.8.0-7630.32) cheetah; urgency=medium
+
+* Initial KloudOS Scripts.
+
+-- KloudOS <admin@kloudos.org>  Sat, 05 Dec 2020 21:12:01 -0800
+
 linux (5.8.0-7630.32) groovy; urgency=medium
 
   [ Stefan Bader ]
