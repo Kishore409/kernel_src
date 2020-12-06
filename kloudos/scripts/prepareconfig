@@ -166,18 +166,18 @@ scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_COMMON_DEBUG_INCLUDE
 update_config --false --client --all --all --all
 
 #####ARM specific config
-PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE=$PC_COMMON_arm_64_CONFIG' kloudos/config/common_defconfig kloudos/config/common_arm_defconfig kloudos/config/android_defconfig kloudos/config/common_virtio_defconfig'
+PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE=$PC_COMMON_arm_64_CONFIG' kloudos/config/common_defconfig kloudos/config/remove_non_amd_defconfig kloudos/config/remove_non_intel_defconfig kloudos/config/common_arm_defconfig kloudos/config/android_defconfig kloudos/config/common_virtio_defconfig'
 
 PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE=$PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE' kloudos/config/debug_arm_defconfig'
 
 ## Generate specific release config
 
-scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE kloudos/config/remove_non_amd_defconfig kloudos/config/remove_non_intel_defconfig
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_RELEASE_INCLUDE
 
 update_config --false --client --arm64 --arm64
 
 ## Generate specific debug config
-scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE kloudos/config/remove_non_amd_defconfig kloudos/config/remove_non_intel_defconfig
+scripts/kconfig/merge_config.sh  $PC_BUILD_CONFIG_ARM_COMMON_DEBUG_INCLUDE
 
 update_config --true --client --arm64 --arm64
 
