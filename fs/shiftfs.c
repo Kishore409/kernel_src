@@ -327,7 +327,8 @@ static int shiftfs_setxattr(struct dentry *dentry, struct inode *inode,
 
 static int shiftfs_xattr_get(const struct xattr_handler *handler,
 			     struct dentry *dentry, struct inode *inode,
-			     const char *name, void *value, size_t size)
+			     const char *name, void *value,
+			     size_t size, int flags)
 {
 	struct dentry *lowerd = dentry->d_fsdata;
 	int err;
@@ -922,13 +923,14 @@ static struct posix_acl *shiftfs_get_acl(struct inode *inode, int type)
 static int
 shiftfs_posix_acl_xattr_get(const struct xattr_handler *handler,
 			   struct dentry *dentry, struct inode *inode,
-			   const char *name, void *buffer, size_t size)
+			   const char *name, void *buffer,
+			   size_t size, int flags)
 {
 	struct inode *loweri = inode->i_private;
 	int ret;
 
 	ret = shiftfs_xattr_get(NULL, dentry, inode, handler->name,
-				buffer, size);
+				buffer, size, flags);
 	if (ret < 0)
 		return ret;
 
